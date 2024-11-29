@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- CSS Variables and Theme Configuration 
+         Variables CSS y Configuración de Tema -->
+    <style>
+        /* Modern CSS variables for theming 
+           Variables CSS modernas para temas */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --accent-color: #4A90E2;
+            --done-color: #9eb2c7;
+            --delete-color: #ff6b6b;
+        }
+
+        /* Dark mode theme variables 
+           Variables para el modo oscuro */
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #ffffff;
+            --accent-color: #64b5f6;
+            --done-color: #4f5b66;
+        }
+
+        /* Basic reset and font settings 
+           Configuración básica de reset y fuentes */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* Container and layout styles 
+           Estilos de contenedor y disposición */
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            transition: background 0.3s, color 0.3s;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        /* Form and input styles 
+           Estilos de formulario y campos de entrada */
+        #theme-toggle {
+            background: none;
+            border: 2px solid var(--text-color);
+            color: var(--text-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #todo-form {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        #todo-input {
+            flex: 2;
+            min-width: 200px;
+            padding: 1rem;
+            border: 2px solid var(--accent-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        #date-input {
+            flex: 1;
+            min-width: 150px;
+            padding: 1rem;
+            border: 2px solid var(--accent-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .todo-date {
+            color: var(--done-color);
+            font-size: 0.85rem;
+            margin-left: auto;
+            padding: 0.5rem;
+        }
+
+        button {
+            padding: 1rem 2rem;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        #todo-list {
+            list-style: none;
+        }
+
+        /* Task item styles 
+           Estilos de elementos de tarea */
+        .todo-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .todo-item.done .todo-text {
+            color: var(--done-color);
+            text-decoration: line-through;
+        }
+
+        .todo-text {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            background: none;
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+
+        .delete-btn {
+            background: var(--delete-color);
+            padding: 0.5rem 1rem;
+        }
+
+        /* Responsive design styles 
+           Estilos de diseño responsivo */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 1rem;
+            }
+
+            #todo-form {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+
+        .tasks-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .section-title {
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 0.5rem;
+        }
+
+        #completed-list {
+            list-style: none;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Container Structure 
+         Estructura del Contenedor Principal -->
+    <div class="container">
+        <div class="header">
+            <h1>Todo List</h1>
+            <button id="theme-toggle">🌙</button>
+        </div>
+        
+        <form id="todo-form">
+            <input type="text" id="todo-input" placeholder="Add a new task..." required>
+            <input type="date" id="date-input" required>
+            <button type="submit">Add Task</button>
+        </form>
+
+        <div class="tasks-container">
+            <section>
+                <h2 class="section-title">Active Tasks</h2>
+                <ul id="todo-list"></ul>
+            </section>
+
+            <section>
+                <h2 class="section-title">Completed Tasks</h2>
+                <ul id="completed-list"></ul>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        /* DOM Element Selection 
+           Selección de Elementos del DOM */
+        const themeToggle = document.getElementById('theme-toggle');
+        const todoForm = document.getElementById('todo-form');
+        const todoInput = document.getElementById('todo-input');
+        const dateInput = document.getElementById('date-input');
+        const todoList = document.getElementById('todo-list');
+        const completedList = document.getElementById('completed-list');
+
+        // Load saved tasks from localStorage
+        let todos = JSON.parse(localStorage.getItem('todos')) || [];
+        let completedTodos = JSON.parse(localStorage.getItem('completedTodos')) || [];
+
+        /* Theme Management 
+           Gestión del Tema */
+        themeToggle.addEventListener('click', () => {
+            document.body.dataset.theme = 
+                document.body.dataset.theme === 'dark' ? '' : 'dark';
+            themeToggle.textContent = 
+                document.body.dataset.theme === 'dark' ? '☀️' : '🌙';
+            localStorage.setItem('theme', document.body.dataset.theme);
+        });
+
+        // Load saved theme
+        document.body.dataset.theme = localStorage.getItem('theme') || '';
+        themeToggle.textContent = 
+            document.body.dataset.theme === 'dark' ? '☀️' : '🌙';
+
+        // Set default date to today
+        dateInput.valueAsDate = new Date();
+
+        /* Event Handlers 
+           Manejadores de Eventos */
+        todoForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = todoInput.value.trim();
+            if (text) {
+                addTodo(text);
+                todoInput.value = '';
+                saveTodos();
+            }
+        });
+
+        /* Todo Management Functions 
+           Funciones de Gestión de Tareas */
+        function addTodo(text) {
+            const todo = {
+                id: Date.now(),
+                text,
+                date: dateInput.value,
+                done: false
+            };
+            todos.push(todo);
+            renderTodo(todo);
+        }
+
+        /* Task Management Functions 
+           Funciones de Gestión de Tareas */
+        function saveTodos() {
+            localStorage.setItem('todos', JSON.stringify(todos));
+        }
+
+        function renderTodo(todo) {
+            const li = document.createElement('li');
+            li.className = 'todo-item' + (todo.done ? ' done' : '');
+            li.dataset.id = todo.id;
+            
+            li.innerHTML = `
+                <input type="checkbox" ${todo.done ? 'checked' : ''}>
+                <input type="text" class="todo-text" value="${todo.text}">
+                <span class="todo-date">${todo.date}</span>
+                <button class="delete-btn">Delete</button>
+            `;
+
+            const checkbox = li.querySelector('input[type="checkbox"]');
+            const textInput = li.querySelector('.todo-text');
+            const deleteBtn = li.querySelector('.delete-btn');
+
+            checkbox.addEventListener('change', () => {
+                todo.done = checkbox.checked;
+                li.classList.toggle('done');
+                
+                if (todo.done) {
+                    todos = todos.filter(t => t.id !== todo.id);
+                    completedTodos.push(todo);
+                    completedList.appendChild(li);
+                    saveTodos(); // Only save active todos
+                } else {
+                    completedTodos = completedTodos.filter(t => t.id !== todo.id);
+                    todos.push(todo);
+                    todoList.appendChild(li);
+                    saveTodos();
+                }
+            });
+
+            textInput.addEventListener('change', () => {
+                todo.text = textInput.value;
+                if (!todo.done) {
+                    // Only save changes for active tasks
+                    saveTodos();
+                }
+            });
+
+            deleteBtn.addEventListener('click', () => {
+                li.remove();
+                if (todo.done) {
+                    // For completed tasks, just remove from DOM and completedTodos array
+                    // No need to save to localStorage
+                    completedTodos = completedTodos.filter(t => t.id !== todo.id);
+                } else {
+                    // For active tasks, remove and update localStorage
+                    todos = todos.filter(t => t.id !== todo.id);
+                    saveTodos();
+                }
+            });
+
+            // Append to the correct list
+            if (todo.done) {
+                completedList.appendChild(li);
+            } else {
+                todoList.appendChild(li);
+            }
+        }
+
+        /* Initial Load Handler 
+           Manejador de Carga Inicial */
+        window.addEventListener('load', () => {
+            // Only load active todos from localStorage
+            todos = JSON.parse(localStorage.getItem('todos')) || [];
+            completedTodos = []; // Start with empty completed todos
+            
+            // Clear lists first
+            todoList.innerHTML = '';
+            completedList.innerHTML = '';
+            
+            // Render active tasks
+            todos.forEach(todo => {
+                todo.done = false;
+                renderTodo(todo);
+            });
+        });
+    </script>
+</body>
+</html>
